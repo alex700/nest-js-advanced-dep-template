@@ -1,31 +1,17 @@
-# syntax=docker/dockerfile:1.6
-
-# ---------- Builder ----------
-FROM node:20-bookworm AS builder
+FROM node:22-bookworm-slim AS builder
 WORKDIR /app
+COPY package.json package-lock.json .npmrc ./
+RUN npm ci --ignore-scripts --no-audit --no-fund
+COPY tsconfig.json ./
+COPY toy ./toy
+RUN npm run build && npm prune --omit=dev --ignore-scripts
 
-COPY package.json package-lock.json ./
-RUN npm ci
-
-# Bring only what’s needed to build first for better caching
-#COPY tsconfig*.json nest-cli.json ./
-#COPY src ./src
-#COPY db ./db
-#COPY tools ./tools
-COPY . .
-
-
-RUN npm run build
-RUN npm prune --omit=dev
-
-# ---------- Runtime ----------
-FROM gcr.io/distroless/nodejs20
+FROM node:22-bookworm-slim
 WORKDIR /app
-ENV NODE_ENV=production
-
-COPY --from=builder /app/dist ./dist
+ENV NODE_ENV=production PORT=4000
 COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/dist ./dist
 COPY package.json ./
-
-EXPOSE 8080
-CMD ["dist/src/main.js"]
+USER node
+EXPOSE 4000
+CMD ["node", "dist/serve.js"]

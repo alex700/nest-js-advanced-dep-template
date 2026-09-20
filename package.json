@@ -1,5 +1,5 @@
 {
-  "name": "insight-guardian-backend",
+  "name": "dice-toy-api",
   "version": "0.0.1",
   "description": "",
   "author": "",
@@ -70,5 +70,11 @@
   },
   "engines": {
     "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "npm run build && node dist/serve.js",
+    "start:prod": "node dist/serve.js",
+    "test": "npm run build && node --test checks/*.test.cjs"
   }
 }
